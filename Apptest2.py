@@ -53,10 +53,7 @@ def create_qr_image(model, serial, phone_number):
 
     draw = ImageDraw.Draw(new_img)
 
-    try:
-        font = ImageFont.truetype("arial.ttf", 20)
-    except:
-        font = ImageFont.load_default()
+    font = ImageFont.truetype("DejaVuSans.ttf", 20)
 
     text = f"{model}\nSerial Number:{serial}"
 
@@ -93,7 +90,8 @@ if model in special_models:
 
         draw = ImageDraw.Draw(new_img)
 
-        font = ImageFont.truetype("arial.ttf", 20)
+        
+        font = ImageFont.truetype("DejaVuSans.ttf", 20)
 
         text = f"{model}\nPrd:{production_date.strftime('%d/%m/%Y')} Exp:{expiry_date.strftime('%d/%m/%Y')}"
        
