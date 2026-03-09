@@ -66,7 +66,7 @@ if st.button("Générer le QR code"):
             new_img = Image.new("RGB", (width, height + 60), "white")
 
             # Paste QR code
-            new_img.paste(img, (0, 60))
+            #new_img.paste(img, (0, 60))
 
             # Add text
             draw = ImageDraw.Draw(new_img)
