@@ -3,10 +3,10 @@ import qrcode
 from urllib.parse import quote
 from io import BytesIO
 
-st.set_page_config(page_title="Générateur de QR code", page_icon="")
+st.set_page_config(page_title="Générateur de QR code", page_icon=" 📱")
 
-st.title("Générateur de QR code WhatsApp")
-st.write("Créez un QR code pour ouvrir WhatsApp avec un message de support prérempli.")
+st.title("Générateur de QR code - SAV WATALUX")
+st.text("Générez le QR code à afficher sur le dispositif en sélectionnant le modèle et le numéro de série.")
 
 # Fixed WhatsApp number
 phone_number = "393663489952"
