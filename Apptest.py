@@ -3,7 +3,7 @@ import qrcode
 from urllib.parse import quote
 from io import BytesIO
 
-st.set_page_config(page_title="Générateur de QR code", page_icon=" 📱")
+st.set_page_config(page_title="Générateur de QR code", page_icon="📱")
 st.image("WATA_logo_150px.png", width=200)
 st.title("Générateur de QR code - SAV WATALUX")
 st.text("Générez le QR code à afficher sur le dispositif en sélectionnant le modèle et le numéro de série.")
@@ -17,7 +17,7 @@ model = st.selectbox(
     "Modèle du dispositif",
     ["Mini-WATA", "WATA-Standard", "WATA-Plus", "Maxi-WATA", "WataTest", "WataStab","WataBlue"]
 )
-serial = st.text_input("Numéro de série", value="1234")
+serial = st.text_input("Numéro de série", value="0000")
 
 if st.button("Générer le QR code"):
     if not model.strip() or not serial.strip():
