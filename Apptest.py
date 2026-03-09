@@ -4,10 +4,10 @@ from urllib.parse import quote
 from io import BytesIO
 
 st.set_page_config(page_title="Générateur de QR code", page_icon=" 📱")
-
+st.image("WATA_logo_150px.png", width=200)
 st.title("Générateur de QR code - SAV WATALUX")
 st.text("Générez le QR code à afficher sur le dispositif en sélectionnant le modèle et le numéro de série.")
-st.image("WATA_logo_150px.png", width=200)
+
 
 # Fixed WhatsApp number
 phone_number = "393663489952"
