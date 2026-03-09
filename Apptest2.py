@@ -32,7 +32,7 @@ model = st.selectbox(
     ]
 )
 
-special_models = ["WataTest", "WataBlue"]
+kits = ["WataTest", "WataBlue"]
 
 
 def create_qr_image(model, serial, phone_number):
@@ -62,7 +62,7 @@ def create_qr_image(model, serial, phone_number):
     return new_img, msg, whatsapp_link
 
 
-if model in special_models:
+if model in kits:
     production_date = st.date_input("Date de production")
     expiry_date = st.date_input("Date de péremption")
 
