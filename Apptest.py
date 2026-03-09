@@ -67,11 +67,12 @@ if st.button("Générer le QR code"):
             # Paste QR code
             new_img.paste(img, (0, 60))
 
-            # Add text
             draw = ImageDraw.Draw(new_img)
-            text = f"{model} - Prd:{production_date.strftime('%d/%m/%Y')} Exp:{expiry_date.strftime('%d/%m/%Y')}"
 
-            draw.text((10, 20), text, fill="black", fontsize=14)
+            font = ImageFont.truetype("arial.ttf", 20)
+            text = f"{model} \nPrd:{production_date.strftime('%d/%m/%Y')} Exp:{expiry_date.strftime('%d/%m/%Y')}"
+
+            draw.text((40, 30), text, fill="black", font=font)
 
             img = new_img
 
@@ -116,11 +117,13 @@ if st.button("Générer le QR code"):
             # Paste QR code
             new_img.paste(img, (0, 60))
 
-            # Add text
             draw = ImageDraw.Draw(new_img)
-            text = f"{model} - NS:{serial}"
 
-            draw.text((10, 30), text, fill="black")
+            font = ImageFont.truetype("arial.ttf", 20)
+
+            text = f"{model} \nNS:{serial}"
+
+            draw.text((40, 30), text, fill="black", font=font)
 
             img = new_img
 
