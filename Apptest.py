@@ -59,14 +59,13 @@ if st.button("Générer le QR code"):
             qr.add_data(whatsapp_link)
             qr.make(fit=True)
 
-            img = qr.make_image(fill_color="black", back_color="white")
-
+            img = qr.make_image(fill_color="black", back_color="white").get_image().convert("RGB")
             # Create canvas bigger than QR
             width, height = img.size
             new_img = Image.new("RGB", (width, height + 60), "white")
 
             # Paste QR code
-            #new_img.paste(img, (0, 60))
+            new_img.paste(img, (0, 60))
 
             # Add text
             draw = ImageDraw.Draw(new_img)
@@ -107,7 +106,7 @@ if st.button("Générer le QR code"):
             qr.add_data(whatsapp_link)
             qr.make(fit=True)
 
-            img = qr.make_image(fill_color="black", back_color="white")
+            img = qr.make_image(fill_color="black", back_color="white").get_image().convert("RGB")
 
 
             # Create canvas bigger than QR
