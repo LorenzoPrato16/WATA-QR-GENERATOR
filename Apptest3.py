@@ -272,19 +272,12 @@ else:
 
                             if not preview_done:
                                 st.image(img_buffer, caption=f"Aperçu du premier QR code : {serial_i}")
-                                first_msg = msg
-                                first_link = whatsapp_link
                                 preview_done = True
 
                     zip_buffer.seek(0)
 
                     total = end - start + 1
                     st.success(f"{total} QR codes générés avec succès.")
-
-                    if first_msg:
-                        st.text_area("Message généré (premier QR code)", first_msg, height=100)
-                    if first_link:
-                        st.text_area("Lien WhatsApp (premier QR code)", first_link, height=100)
 
                     st.download_button(
                         label="Télécharger tous les QR codes (.zip)",
