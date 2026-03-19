@@ -222,12 +222,6 @@ if model in kits:
             buffer = BytesIO()
             img.save(buffer, format="PNG")
             buffer.seek(0)
-
-            st.success("QR code généré avec succès.")
-            st.image(buffer, caption="Aperçu du QR code carré")
-            st.text_area("Message généré", msg, height=120)
-            st.text_area("Lien WhatsApp", whatsapp_link, height=100)
-
             st.download_button(
                 label="Télécharger le QR code",
                 data=buffer,
