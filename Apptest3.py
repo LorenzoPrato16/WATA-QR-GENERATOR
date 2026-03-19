@@ -303,15 +303,14 @@ else:
             if not model.strip() or not serial.strip():
                 st.error("Veuillez sélectionner le modèle et saisir le numéro de série.")
             else:
-                img = create_qr_image_serial(model, serial, phone_number)
+                img, msg, whatsapp_link = create_qr_image_serial(model, serial, phone_number)
 
                 buffer = BytesIO()
                 img.save(buffer, format="PNG")
                 buffer.seek(0)
 
                 st.success("QR code généré avec succès.")
-                st.image(buffer, caption="Aperçu du QR code carré")
-
+                st.image(buffer, caption="Aperçu du QR code")
                 st.download_button(
                     label="Télécharger le QR code",
                     data=buffer,
