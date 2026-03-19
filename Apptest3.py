@@ -16,17 +16,10 @@ phone_number = "15551384702"
 model = st.selectbox(
     "Modèle du dispositif",
     [
-        "Mini-WATA (Appareil)",
-        "Mini-WATA (Alimentation Solaire)",
-        "WATA-Standard (Appareil)",
-        "WATA-Standard (Alimentation Secteur)",
-        "WATA-Standard (Alimentation Solaire)",
-        "WATA-Plus (Appareil)",
-        "WATA-Plus (Alimentation Secteur)",
-        "WATA-Plus (Alimentation Solaire)",
-        "WATA-Plus (Boîtier Solaire)",
-        "Maxi-WATA (Appareil)",
-        "Maxi-WATA (Alimentation Secteur)",
+        "Mini-WATA",
+        "WATA-Standard",
+        "WATA-Plus",
+        "Maxi-WATA",
         "WataTest",
         "WataBlue"
     ]
