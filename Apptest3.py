@@ -6,10 +6,14 @@ from PIL import Image, ImageDraw, ImageFont
 import zipfile
 import os
 
-st.set_page_config(page_title="Générateur de QR code", page_icon="WATA-logo-400x400px.ico", layout="centered")
+st.set_page_config(
+    page_title="Générateur de QR code",
+    page_icon="WATA-logo-400x400px.ico",
+    layout="centered"
+)
 st.image("WATA_logo_150px.png", width=200)
 st.title("Générateur de QR code - SAV WATALUX")
-st.text("Générez le QR code à afficher sur le dispositif en sélectionnant le modèle et le numéro de série.")
+st.text("Générez un QR code à afficher sur le dispositif pour contacter le portail SAV.")
 
 phone_number = "15551384702"
 
@@ -28,31 +32,176 @@ model = st.selectbox(
 kits = ["WataTest", "WataBlue"]
 
 
-def create_qr_image(model, serial, phone_number):
-    msg = f"SUPPORT REQUEST\nModel: {model}\nSerial: {serial}"
-    encoded_message = quote(msg)
-    whatsapp_link = f"https://wa.me/{phone_number}?text={encoded_message}"
+def load_font(size, bold=False):
+    font_candidates = []
+    if bold:
+        font_candidates = [
+            "Montserrat-Bold.ttf",
+        ]
+    else:
+        font_candidates = [
+            "Montserrat-Regular.ttf",
+        ]
 
+    for font_path in font_candidates:
+        try:
+            return ImageFont.truetype(font_path, size)
+        except Exception:
+            continue
+
+    return ImageFont.load_default()
+
+
+def safe_filename(text):
+    return text.replace("/", "-").replace(" ", "_").replace(":", "-")
+
+
+def generate_whatsapp_link(message, phone_number):
+    encoded_message = quote(message)
+    return f"https://wa.me/{phone_number}?text={encoded_message}"
+
+
+def generate_qr_code(whatsapp_link):
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(whatsapp_link)
     qr.make(fit=True)
+    return qr.make_image(fill_color="black", back_color="white").get_image().convert("RGB")
 
-    img = qr.make_image(fill_color="black", back_color="white").get_image().convert("RGB")
 
-    width, height = img.size
-    top_margin = 80
-    new_img = Image.new("RGB", (width, height + top_margin), "white")
-    new_img.paste(img, (0, top_margin))
+def fit_text(draw, text, max_width, start_size=28, min_size=14, bold=False):
+    for size in range(start_size, min_size - 1, -1):
+        font = load_font(size, bold=bold)
+        bbox = draw.textbbox((0, 0), text, font=font)
+        width = bbox[2] - bbox[0]
+        if width <= max_width:
+            return font
+    return load_font(min_size, bold=bold)
 
-    draw = ImageDraw.Draw(new_img)
 
-    font = ImageFont.truetype("DejaVuSans.ttf", 20)
+def create_square_label(qr_img, title, info_lines):
+    canvas_size = 900
+    bg_color ="#5dc5ea"
+    border_color = "#D9D9D9"
+    text_color = "black"
+    secondary_text = "black"
 
-    text = f"{model}\nSerial Number:{serial}"
+    final_img = Image.new("RGB", (canvas_size, canvas_size), bg_color)
+    draw = ImageDraw.Draw(final_img)
 
-    draw.text((40, 30), text, fill="black", font=font)
+    margin = 30
+    draw.rounded_rectangle(
+        (margin, margin, canvas_size - margin, canvas_size - margin),
+        radius=28,
+        outline=border_color,
+        width=3,
+        fill="#edf7fd"
+    )
 
-    return new_img, msg, whatsapp_link
+    title_font = fit_text(draw, title, max_width=canvas_size - 120, start_size=34, min_size=20, bold=True)
+    subtitle_font = load_font(20, bold=False)
+    info_font = load_font(24, bold=False)
+    footer_font = load_font(18, bold=False)
+
+    title_bbox = draw.textbbox((0, 0), title, font=title_font)
+    title_width = title_bbox[2] - title_bbox[0]
+    draw.text(
+        ((canvas_size - title_width) / 2, 70),
+        title,
+        fill=text_color,
+        font=title_font
+    )
+
+    subtitle = "Scannez ce QR code pour contacter le support WATALUX"
+    subtitle_font = fit_text(draw, subtitle, max_width=canvas_size - 120, start_size=22, min_size=14, bold=False)
+    subtitle_bbox = draw.textbbox((0, 0), subtitle, font=subtitle_font)
+    subtitle_width = subtitle_bbox[2] - subtitle_bbox[0]
+    draw.text(
+        ((canvas_size - subtitle_width) / 2, 130),
+        subtitle,
+        fill=text_color,
+        font=subtitle_font
+    )
+
+    info_text = "\n".join(info_lines)
+    info_bbox = draw.multiline_textbbox((0, 0), info_text, font=info_font, spacing=10)
+    info_width = info_bbox[2] - info_bbox[0]
+    draw.multiline_text(
+        ((canvas_size - info_width) / 2, 210),
+        info_text,
+        fill=text_color,
+        font=info_font,
+        spacing=10,
+        align="center"
+    )
+
+    qr_size = 380
+    qr_img = qr_img.resize((qr_size, qr_size))
+    qr_x = (canvas_size - qr_size) // 2
+    qr_y = 360
+
+    draw.rounded_rectangle(
+        (qr_x - 18, qr_y - 18, qr_x + qr_size + 18, qr_y + qr_size + 18),
+        radius=20,
+        outline="black",
+        width=3,
+        fill="white"
+    )
+    final_img.paste(qr_img, (qr_x, qr_y))
+
+    footer = (
+        "En cas d'impossibilité de scanner le QR code, contactez notre \n"
+        "support technique au +41 22 548 34 00"
+    )
+    footer_bbox = draw.multiline_textbbox((0, 0), footer, font=footer_font, spacing=6)
+    footer_width = footer_bbox[2] - footer_bbox[0]
+    draw.multiline_text(
+        ((canvas_size - footer_width) / 2, 780),
+        footer,
+        fill=secondary_text,
+        font=footer_font,
+        spacing=6,
+        align="center"
+    )
+
+    return final_img
+
+
+def create_qr_image_serial(model, serial, phone_number):
+    msg = f"SUPPORT REQUEST\nModel: {model}\nSerial: {serial}"
+    whatsapp_link = generate_whatsapp_link(msg, phone_number)
+    qr_img = generate_qr_code(whatsapp_link)
+
+    info_lines = [
+        f"Modèle : {model}",
+        f"Numéro de série : {serial}"
+    ]
+
+    final_img = create_square_label(qr_img, "Support WATALUX", info_lines)
+    return final_img, msg, whatsapp_link
+
+
+def create_qr_image_kit(model, production_date, expiry_date, phone_number):
+    prod_str = production_date.strftime("%d/%m/%Y")
+    exp_str = expiry_date.strftime("%d/%m/%Y")
+
+    msg = (
+        f"SUPPORT REQUEST\n"
+        f"Model: {model}\n"
+        f"Production date: {prod_str}\n"
+        f"Expiry date: {exp_str}"
+    )
+
+    whatsapp_link = generate_whatsapp_link(msg, phone_number)
+    qr_img = generate_qr_code(whatsapp_link)
+
+    info_lines = [
+        f"Modèle : {model}",
+        f"Date de production : {prod_str}",
+        f"Date de péremption : {exp_str}"
+    ]
+
+    final_img = create_square_label(qr_img, "Support WATALUX", info_lines)
+    return final_img, msg, whatsapp_link
 
 
 if model in kits:
@@ -60,51 +209,31 @@ if model in kits:
     expiry_date = st.date_input("Date de péremption")
 
     if st.button("Générer le QR code"):
-        msg = (
-            f"SUPPORT REQUEST\n"
-            f"Model: {model}\n"
-            f"Production date: {production_date.strftime('%d/%m/%Y')}\n"
-            f"Expiry date: {expiry_date.strftime('%d/%m/%Y')}"
-        )
+        if expiry_date < production_date:
+            st.error("La date de péremption doit être postérieure ou égale à la date de production.")
+        else:
+            img, msg, whatsapp_link = create_qr_image_kit(
+                model,
+                production_date,
+                expiry_date,
+                phone_number
+            )
 
-        encoded_message = quote(msg)
-        whatsapp_link = f"https://wa.me/{phone_number}?text={encoded_message}"
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            buffer.seek(0)
 
-        qr = qrcode.QRCode(version=1, box_size=10, border=4)
-        qr.add_data(whatsapp_link)
-        qr.make(fit=True)
+            st.success("QR code généré avec succès.")
+            st.image(buffer, caption="Aperçu du QR code carré")
+            st.text_area("Message généré", msg, height=120)
+            st.text_area("Lien WhatsApp", whatsapp_link, height=100)
 
-        img = qr.make_image(fill_color="black", back_color="white").get_image().convert("RGB")
-
-        width, height = img.size
-        top_margin = 80
-        new_img = Image.new("RGB", (width, height + top_margin), "white")
-        new_img.paste(img, (0, top_margin))
-
-        draw = ImageDraw.Draw(new_img)
-
-        
-        font = ImageFont.truetype("DejaVuSans.ttf", 20)
-
-        text = f"{model}\nPrd:{production_date.strftime('%d/%m/%Y')} Exp:{expiry_date.strftime('%d/%m/%Y')}"
-       
-        draw.text((40, 30), text, fill="black", font=font)
-
-        buffer = BytesIO()
-        new_img.save(buffer, format="PNG")
-        buffer.seek(0)
-
-        st.success("QR code généré avec succès.")
-        st.image(buffer, caption="Aperçu du QR code")
-        st.text_area("Message généré", msg, height=120)
-        st.text_area("Lien WhatsApp", whatsapp_link, height=100)
-
-        st.download_button(
-            label="Télécharger le QR code",
-            data=buffer,
-            file_name=f"qr_{model}_{production_date}_{expiry_date}.png",
-            mime="image/png"
-        )
+            st.download_button(
+                label="Télécharger le QR code",
+                data=buffer,
+                file_name=f"qr_{safe_filename(model)}_{production_date.strftime('%Y%m%d')}_{expiry_date.strftime('%Y%m%d')}.png",
+                mime="image/png"
+            )
 
 else:
     multiple = st.checkbox("Générer plusieurs QR codes")
@@ -116,7 +245,6 @@ else:
         serial = st.text_input("Numéro de série", value="0001")
 
     if st.button("Générer les QR codes" if multiple else "Générer le QR code"):
-
         if multiple:
             if not model.strip() or not first_serial.strip() or not last_serial.strip():
                 st.error("Veuillez sélectionner le modèle et saisir les numéros de série.")
@@ -134,23 +262,24 @@ else:
 
                     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                         preview_done = False
+                        first_msg = None
+                        first_link = None
 
                         for i in range(start, end + 1):
                             serial_i = str(i).zfill(serial_width)
-                            img, msg, whatsapp_link = create_qr_image(model, serial_i, phone_number)
+                            img, msg, whatsapp_link = create_qr_image_serial(model, serial_i, phone_number)
 
                             img_buffer = BytesIO()
                             img.save(img_buffer, format="PNG")
                             img_buffer.seek(0)
 
-                            safe_model = model.replace("/", "-").replace(" ", "_")
-                            file_name = f"qr_{safe_model}_{serial_i}.png"
+                            file_name = f"qr_{safe_filename(model)}_{serial_i}.png"
                             zip_file.writestr(file_name, img_buffer.getvalue())
 
                             if not preview_done:
                                 st.image(img_buffer, caption=f"Aperçu du premier QR code : {serial_i}")
-                                st.text_area("Message généré (premier QR code)", msg, height=100)
-                                st.text_area("Lien WhatsApp (premier QR code)", whatsapp_link, height=100)
+                                first_msg = msg
+                                first_link = whatsapp_link
                                 preview_done = True
 
                     zip_buffer.seek(0)
@@ -158,11 +287,15 @@ else:
                     total = end - start + 1
                     st.success(f"{total} QR codes générés avec succès.")
 
-                    safe_model = model.replace("/", "-").replace(" ", "_")
+                    if first_msg:
+                        st.text_area("Message généré (premier QR code)", first_msg, height=100)
+                    if first_link:
+                        st.text_area("Lien WhatsApp (premier QR code)", first_link, height=100)
+
                     st.download_button(
                         label="Télécharger tous les QR codes (.zip)",
                         data=zip_buffer,
-                        file_name=f"qr_codes_{safe_model}_{first_serial}_to_{last_serial}.zip",
+                        file_name=f"qr_codes_{safe_filename(model)}_{first_serial}_to_{last_serial}.zip",
                         mime="application/zip"
                     )
 
@@ -170,21 +303,20 @@ else:
             if not model.strip() or not serial.strip():
                 st.error("Veuillez sélectionner le modèle et saisir le numéro de série.")
             else:
-                img, msg, whatsapp_link = create_qr_image(model, serial, phone_number)
+                img, msg, whatsapp_link = create_qr_image_serial(model, serial, phone_number)
 
                 buffer = BytesIO()
                 img.save(buffer, format="PNG")
                 buffer.seek(0)
 
                 st.success("QR code généré avec succès.")
-                st.image(buffer, caption="Aperçu du QR code")
+                st.image(buffer, caption="Aperçu du QR code carré")
                 st.text_area("Message généré", msg, height=100)
                 st.text_area("Lien WhatsApp", whatsapp_link, height=100)
 
-                safe_model = model.replace("/", "-").replace(" ", "_")
                 st.download_button(
                     label="Télécharger le QR code",
                     data=buffer,
-                    file_name=f"qr_{safe_model}_{serial}.png",
+                    file_name=f"qr_{safe_filename(model)}_{serial}.png",
                     mime="image/png"
                 )
