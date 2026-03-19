@@ -222,6 +222,7 @@ if model in kits:
             buffer = BytesIO()
             img.save(buffer, format="PNG")
             buffer.seek(0)
+            st.image(buffer, caption="Aperçu du QR code")
             st.download_button(
                 label="Télécharger le QR code",
                 data=buffer,
