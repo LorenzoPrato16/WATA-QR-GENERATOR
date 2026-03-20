@@ -15,7 +15,7 @@ st.image("WATA_logo_150px.png", width=200)
 st.title("Générateur de QR code - SAV WATALUX")
 st.text("Générez un QR code à afficher sur le dispositif pour contacter le portail SAV.")
 
-phone_number = "15551384702"
+phone_number = "41225483400"
 
 model = st.selectbox(
     "Modèle du dispositif",
