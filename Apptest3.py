@@ -80,8 +80,8 @@ def fit_text(draw, text, max_width, start_size=28, min_size=14, bold=False):
 
 def create_square_label(qr_img, title, info_lines):
     canvas_size = 900
-    bg_color ="#2b2c2c"
-    border_color = "#D9D9D9"
+    bg_color ="#4a4c4e"
+    border_color = "#928F8F"
     text_color = "black"
     secondary_text = "black"
 
@@ -94,7 +94,7 @@ def create_square_label(qr_img, title, info_lines):
         radius=28,
         outline=border_color,
         width=3,
-        fill="#edf7fd"
+        fill="#ffffff"
     )
 
     title_font = fit_text(draw, title, max_width=canvas_size - 120, start_size=34, min_size=20, bold=True)
