@@ -98,9 +98,9 @@ def create_square_label(qr_img, title, info_lines):
     )
 
     title_font = fit_text(draw, title, max_width=canvas_size - 120, start_size=34, min_size=20, bold=True)
-    subtitle_font = load_font(20, bold=False)
-    info_font = load_font(24, bold=False)
-    footer_font = load_font(18, bold=False)
+    subtitle_font = load_font(24, bold=False)
+    info_font = load_font(28, bold=False)
+    footer_font = load_font(24, bold=False)
 
     title_bbox = draw.textbbox((0, 0), title, font=title_font)
     title_width = title_bbox[2] - title_bbox[0]
