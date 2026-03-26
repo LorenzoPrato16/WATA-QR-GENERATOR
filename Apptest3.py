@@ -98,7 +98,7 @@ def create_square_label(qr_img, title, info_lines):
     )
 
     title_font = fit_text(draw, title, max_width=canvas_size - 120, start_size=34, min_size=20, bold=True)
-    subtitle_font = load_font(24, bold=False)
+    subtitle_font = load_font(28, bold=False)
     info_font = load_font(28, bold=False)
     footer_font = load_font(24, bold=False)
 
@@ -134,7 +134,7 @@ def create_square_label(qr_img, title, info_lines):
         align="center"
     )
 
-    qr_size = 380
+    qr_size = 600
     qr_img = qr_img.resize((qr_size, qr_size))
     qr_x = (canvas_size - qr_size) // 2
     qr_y = 360
