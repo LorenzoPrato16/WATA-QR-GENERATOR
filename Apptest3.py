@@ -67,7 +67,7 @@ def generate_qr_code(whatsapp_link):
     qr = qrcode.QRCode(version=1, box_size=15, border=1)
     qr.add_data(whatsapp_link)
     qr.make(fit=True)
-    return qr.make_image(fill_color="black", back_color="none").get_image().convert("RGB")
+    return qr.make_image(fill_color="black", back_color=None).get_image().convert("RGB")
 
 
 def fit_text(draw, text, max_width, start_size=28, min_size=14, bold=False):
@@ -82,7 +82,7 @@ def fit_text(draw, text, max_width, start_size=28, min_size=14, bold=False):
 
 def create_square_label(qr_img, title, info_lines):
     canvas_size = 900
-    bg_color = "none"
+    bg_color = None
     text_color = "black"
     secondary_text = "black"
 
@@ -139,7 +139,7 @@ def create_square_label(qr_img, title, info_lines):
         radius=20,
         outline="black",
         width=3,
-        fill="none"
+        fill=None
     )
     final_img.paste(qr_img, (qr_x, qr_y))
 
