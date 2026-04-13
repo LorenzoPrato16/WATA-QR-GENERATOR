@@ -26,7 +26,8 @@ model = st.selectbox(
         "WATA-Plus",
         "Maxi-WATA",
         "WataTest",
-        "WataBlue"
+        "WataBlue",
+        "WATAFLOW"
     ]
 )
 
