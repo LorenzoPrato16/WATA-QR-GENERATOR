@@ -67,7 +67,19 @@ def generate_qr_code(whatsapp_link):
     qr = qrcode.QRCode(version=1, box_size=15, border=1)
     qr.add_data(whatsapp_link)
     qr.make(fit=True)
-    return qr.make_image(fill_color="black", back_color="white").get_image().convert("RGB")
+    qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGBA")
+    
+    # Make white background transparent
+    datas = qr_img.getdata()
+    new_data = []
+    for item in datas:
+        if item[0] == 255 and item[1] == 255 and item[2] == 255:  # white
+            new_data.append((255, 255, 255, 0))  # transparent
+        else:
+            new_data.append(item)
+    qr_img.putdata(new_data)
+    
+    return qr_img
 
 
 def fit_text(draw, text, max_width, start_size=28, min_size=14, bold=False):
@@ -82,11 +94,11 @@ def fit_text(draw, text, max_width, start_size=28, min_size=14, bold=False):
 
 def create_square_label(qr_img, title, info_lines):
     canvas_size = 900
-    bg_color = "white"
+    bg_color = (255, 255, 255, 0)  # transparent
     text_color = "black"
     secondary_text = "black"
 
-    final_img = Image.new("RGB", (canvas_size, canvas_size), bg_color)
+    final_img = Image.new("RGBA", (canvas_size, canvas_size), bg_color)
     draw = ImageDraw.Draw(final_img)
 
     title_font = fit_text(draw, title, max_width=canvas_size - 80, start_size=60, min_size=40, bold=True)
@@ -138,8 +150,7 @@ def create_square_label(qr_img, title, info_lines):
         (qr_x - 16, qr_y - 16, qr_x + qr_size + 16, qr_y + qr_size + 16),
         radius=20,
         outline="black",
-        width=3,
-        fill="white"
+        width=3
     )
     final_img.paste(qr_img, (qr_x, qr_y))
 
