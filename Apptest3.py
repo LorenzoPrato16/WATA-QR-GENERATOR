@@ -11,6 +11,7 @@ st.set_page_config(
     page_icon="WATA-logo-400x400px.ico",
     layout="centered"
 )
+
 st.image("WATA_logo_150px.png", width=200)
 st.title("Générateur de QR code - SAV WATALUX")
 st.text("Générez un QR code à afficher sur le dispositif pour contacter le portail SAV.")
@@ -62,7 +63,7 @@ def generate_whatsapp_link(message, phone_number):
 
 
 def generate_qr_code(whatsapp_link):
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr = qrcode.QRCode(version=1, box_size=15, border=1)
     qr.add_data(whatsapp_link)
     qr.make(fit=True)
     return qr.make_image(fill_color="black", back_color="white").get_image().convert("RGB")
@@ -80,67 +81,60 @@ def fit_text(draw, text, max_width, start_size=28, min_size=14, bold=False):
 
 def create_square_label(qr_img, title, info_lines):
     canvas_size = 900
-    bg_color ="#4a4c4e"
-    border_color = "#928F8F"
+    bg_color = "white"
     text_color = "black"
     secondary_text = "black"
 
     final_img = Image.new("RGB", (canvas_size, canvas_size), bg_color)
     draw = ImageDraw.Draw(final_img)
 
-    margin = 30
-    draw.rounded_rectangle(
-        (margin, margin, canvas_size - margin, canvas_size - margin),
-        radius=28,
-        outline=border_color,
-        width=3,
-        fill="#ffffff"
-    )
+    title_font = fit_text(draw, title, max_width=canvas_size - 80, start_size=60, min_size=40, bold=True)
+    subtitle = "Scan this QR to contact us"
+    subtitle_font = fit_text(draw, subtitle, max_width=canvas_size - 80, start_size=38, min_size=38, bold=False)
+    info_font = load_font(38, bold=False)
+    footer_font = load_font(42, bold=False)
 
-    title_font = fit_text(draw, title, max_width=canvas_size - 120, start_size=34, min_size=20, bold=True)
-    subtitle_font = load_font(24, bold=False)
-    info_font = load_font(28, bold=False)
-    footer_font = load_font(24, bold=False)
-
+    # Title
     title_bbox = draw.textbbox((0, 0), title, font=title_font)
     title_width = title_bbox[2] - title_bbox[0]
     draw.text(
-        ((canvas_size - title_width) / 2, 70),
+        ((canvas_size - title_width) / 2, 55),
         title,
         fill=text_color,
         font=title_font
     )
 
-    subtitle = "Scannez ce QR code pour contacter le support WATALUX"
-    subtitle_font = fit_text(draw, subtitle, max_width=canvas_size - 120, start_size=22, min_size=14, bold=False)
+    # Subtitle
     subtitle_bbox = draw.textbbox((0, 0), subtitle, font=subtitle_font)
     subtitle_width = subtitle_bbox[2] - subtitle_bbox[0]
     draw.text(
-        ((canvas_size - subtitle_width) / 2, 130),
+        ((canvas_size - subtitle_width) / 2, 145),
         subtitle,
         fill=text_color,
         font=subtitle_font
     )
 
+    # Device info
     info_text = "\n".join(info_lines)
-    info_bbox = draw.multiline_textbbox((0, 0), info_text, font=info_font, spacing=10)
+    info_bbox = draw.multiline_textbbox((0, 0), info_text, font=info_font, spacing=14)
     info_width = info_bbox[2] - info_bbox[0]
     draw.multiline_text(
-        ((canvas_size - info_width) / 2, 210),
+        ((canvas_size - info_width) / 2, 205),
         info_text,
         fill=text_color,
         font=info_font,
-        spacing=10,
+        spacing=14,
         align="center"
     )
 
-    qr_size = 380
+    # QR code
+    qr_size = 410
     qr_img = qr_img.resize((qr_size, qr_size))
     qr_x = (canvas_size - qr_size) // 2
-    qr_y = 360
+    qr_y = 340
 
     draw.rounded_rectangle(
-        (qr_x - 18, qr_y - 18, qr_x + qr_size + 18, qr_y + qr_size + 18),
+        (qr_x - 16, qr_y - 16, qr_x + qr_size + 16, qr_y + qr_size + 16),
         radius=20,
         outline="black",
         width=3,
@@ -148,18 +142,18 @@ def create_square_label(qr_img, title, info_lines):
     )
     final_img.paste(qr_img, (qr_x, qr_y))
 
+    # Footer
     footer = (
-        "En cas d'impossibilité de scanner le QR code, contactez notre \n"
-        "support technique au +41 22 548 34 00"
+        "Whatsapp: +41 22 548 34 00"
     )
-    footer_bbox = draw.multiline_textbbox((0, 0), footer, font=footer_font, spacing=6)
+    footer_bbox = draw.multiline_textbbox((0, 0), footer, font=footer_font, spacing=8)
     footer_width = footer_bbox[2] - footer_bbox[0]
     draw.multiline_text(
-        ((canvas_size - footer_width) / 2, 780),
+        ((canvas_size - footer_width) / 2, 795),
         footer,
         fill=secondary_text,
         font=footer_font,
-        spacing=6,
+        spacing=8,
         align="center"
     )
 
@@ -167,16 +161,16 @@ def create_square_label(qr_img, title, info_lines):
 
 
 def create_qr_image_serial(model, serial, phone_number):
-    msg = f"SUPPORT REQUEST\nModel: {model}\nSerial: {serial}"
+    msg = f"SERVICE REQUEST\nModel: {model}\nSerial: {serial}"
     whatsapp_link = generate_whatsapp_link(msg, phone_number)
     qr_img = generate_qr_code(whatsapp_link)
 
     info_lines = [
-        f"Modèle : {model}",
-        f"Numéro de série : {serial}"
+        f"Model : {model}",
+        f"Serial Number : {serial}"
     ]
 
-    final_img = create_square_label(qr_img, "Support WATALUX", info_lines)
+    final_img = create_square_label(qr_img, "SERVICE WATALUX", info_lines)
     return final_img, msg, whatsapp_link
 
 
@@ -200,7 +194,7 @@ def create_qr_image_kit(model, production_date, expiry_date, phone_number):
         f"Date de péremption : {exp_str}"
     ]
 
-    final_img = create_square_label(qr_img, "Support WATALUX", info_lines)
+    final_img = create_square_label(qr_img, "SERVICE WATALUX", info_lines)
     return final_img, msg, whatsapp_link
 
 
@@ -257,8 +251,6 @@ else:
 
                     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                         preview_done = False
-                        first_msg = None
-                        first_link = None
 
                         for i in range(start, end + 1):
                             serial_i = str(i).zfill(serial_width)
