@@ -63,21 +63,30 @@ def generate_whatsapp_link(message, phone_number):
     return f"https://wa.me/{phone_number}?text={encoded_message}"
 
 
-def generate_qr_code(whatsapp_link):
+def generate_qr_code(whatsapp_link,model):
     qr = qrcode.QRCode(version=1, box_size=15, border=1)
     qr.add_data(whatsapp_link)
     qr.make(fit=True)
-    qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGBA")
-    
-    # Make white background transparent
-    datas = qr_img.getdata()
-    new_data = []
-    for item in datas:
-        if item[0] == 255 and item[1] == 255 and item[2] == 255:  # white
-            new_data.append((255, 255, 255, 0))  # transparent
-        else:
-            new_data.append(item)
-    qr_img.putdata(new_data)
+    if model=="Mini-WATA":
+        qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGBA")
+        datas = qr_img.getdata()
+        new_data = []
+        for item in datas:
+            if item[0] == 0 and item[1] == 0 and item[2] == 0:  # white
+                new_data.append((0, 0, 0, 0))  # transparent
+            else:
+                new_data.append(item)
+        qr_img.putdata(new_data)
+    else:
+        qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGBA")
+        datas = qr_img.getdata()
+        new_data = []
+        for item in datas:
+            if item[0] == 255 and item[1] == 255 and item[2] == 255:  # white
+                new_data.append((255, 255, 255, 0))  # transparent
+            else:
+                new_data.append(item)
+        qr_img.putdata(new_data)
     
     return qr_img
 
@@ -92,11 +101,16 @@ def fit_text(draw, text, max_width, start_size=28, min_size=14, bold=False):
     return load_font(min_size, bold=bold)
 
 
-def create_square_label(qr_img, title, info_lines):
+def create_square_label(qr_img, title, info_lines, model):
     canvas_size = 900
     bg_color = (255, 255, 255, 0)  # transparent
-    text_color = "black"
-    secondary_text = "black"
+    
+    if model=="Mini-WATA":
+        text_color = "white"
+        secondary_text = "white"
+    else:
+        text_color = "black"
+        secondary_text = "black"
 
     final_img = Image.new("RGBA", (canvas_size, canvas_size), bg_color)
     draw = ImageDraw.Draw(final_img)
@@ -146,12 +160,21 @@ def create_square_label(qr_img, title, info_lines):
     qr_x = (canvas_size - qr_size) // 2
     qr_y = 340
 
-    draw.rounded_rectangle(
-        (qr_x - 16, qr_y - 16, qr_x + qr_size + 16, qr_y + qr_size + 16),
-        radius=20,
-        outline="black",
-        width=3
+    if model=="Mini-WATA":
+        draw.rounded_rectangle(
+            (qr_x - 16, qr_y - 16, qr_x + qr_size + 16, qr_y + qr_size + 16),
+            radius=20,
+            outline="white",
+            width=3
     )
+    else:
+        draw.rounded_rectangle(
+            (qr_x - 16, qr_y - 16, qr_x + qr_size + 16, qr_y + qr_size + 16),
+            radius=20,
+            outline="black",
+            width=3
+    )
+        
     final_img.paste(qr_img, (qr_x, qr_y))
 
     # Footer
@@ -175,14 +198,14 @@ def create_square_label(qr_img, title, info_lines):
 def create_qr_image_serial(model, serial, phone_number):
     msg = f"SERVICE REQUEST\nModel: {model}\nSerial: {serial}"
     whatsapp_link = generate_whatsapp_link(msg, phone_number)
-    qr_img = generate_qr_code(whatsapp_link)
+    qr_img = generate_qr_code(whatsapp_link,model)
 
     info_lines = [
         f"Model : {model}",
         f"Serial Number : {serial}"
     ]
 
-    final_img = create_square_label(qr_img, "SERVICE WATALUX", info_lines)
+    final_img = create_square_label(qr_img, "SERVICE WATALUX", info_lines,model)
     return final_img, msg, whatsapp_link
 
 
@@ -198,7 +221,7 @@ def create_qr_image_kit(model, production_date, expiry_date, phone_number):
     )
 
     whatsapp_link = generate_whatsapp_link(msg, phone_number)
-    qr_img = generate_qr_code(whatsapp_link)
+    qr_img = generate_qr_code(whatsapp_link,model)
 
     info_lines = [
         f"Modèle : {model}",
