@@ -5,6 +5,7 @@ from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 import zipfile
 import os
+import re
 
 st.set_page_config(
     page_title="Générateur de QR code",
@@ -270,49 +271,60 @@ else:
 
     if st.button("Générer les QR codes" if multiple else "Générer le QR code"):
         if multiple:
-            if not model.strip() or not first_serial.strip() or not last_serial.strip():
-                st.error("Veuillez sélectionner le modèle et saisir les numéros de série.")
-            elif not first_serial.isdigit() or not last_serial.isdigit():
-                st.error("Les numéros de série doivent être des entiers.")
+            if not first_serial.strip() or not last_serial.strip():
+                st.error("Veuillez saisir les numéros de série.")
             else:
-                start = int(first_serial)
-                end = int(last_serial)
-
-                if start > end:
-                    st.error("Le premier numéro de série doit être inférieur ou égal au dernier.")
+                match1 = re.match(r'^([^-]*-)?(\d+)$', first_serial)
+                match2 = re.match(r'^([^-]*-)?(\d+)$', last_serial)
+                if not match1 or not match2:
+                    st.error("Format invalide. Utilisez un préfixe optionnel suivi de chiffres, ex: PB-0001")
                 else:
-                    serial_width = max(len(first_serial), len(last_serial))
-                    zip_buffer = BytesIO()
+                    prefix1 = match1.group(1) or ""
+                    num1_str = match1.group(2)
+                    num1 = int(num1_str)
+                    prefix2 = match2.group(1) or ""
+                    num2_str = match2.group(2)
+                    num2 = int(num2_str)
+                    if prefix1 != prefix2:
+                        st.error("Les préfixes doivent être identiques.")
+                    elif num1 > num2:
+                        st.error("Le premier numéro doit être inférieur ou égal au dernier.")
+                    else:
+                        prefix = prefix1
+                        start = num1
+                        end = num2
+                        width = max(len(num1_str), len(num2_str))
+                        zip_buffer = BytesIO()
 
-                    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-                        preview_done = False
+                        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                            preview_done = False
 
-                        for i in range(start, end + 1):
-                            serial_i = str(i).zfill(serial_width)
-                            img, msg, whatsapp_link = create_qr_image_serial(model, serial_i, phone_number)
+                            for i in range(start, end + 1):
+                                serial_i = f"{prefix}{str(i).zfill(width)}"
+                                img, msg, whatsapp_link = create_qr_image_serial(model, serial_i, phone_number)
 
-                            img_buffer = BytesIO()
-                            img.save(img_buffer, format="PNG")
-                            img_buffer.seek(0)
+                                img_buffer = BytesIO()
+                                img.save(img_buffer, format="PNG")
+                                img_buffer.seek(0)
 
-                            file_name = f"qr_{safe_filename(model)}_{serial_i}.png"
-                            zip_file.writestr(file_name, img_buffer.getvalue())
+                                file_name = f"qr_{safe_filename(model)}_{serial_i}.png"
+                                zip_file.writestr(file_name, img_buffer.getvalue())
 
-                            if not preview_done:
-                                st.image(img_buffer, caption=f"Aperçu du premier QR code : {serial_i}")
-                                preview_done = True
+                                if not preview_done:
+                                    st.image(img_buffer, caption=f"Aperçu du premier QR code : {serial_i}")
+                                    preview_done = True
 
-                    zip_buffer.seek(0)
+                        zip_buffer.seek(0)
 
-                    total = end - start + 1
-                    st.success(f"{total} QR codes générés avec succès.")
+                        total = end - start + 1
+                        st.success(f"{total} QR codes générés avec succès.")
 
-                    st.download_button(
-                        label="Télécharger tous les QR codes (.zip)",
-                        data=zip_buffer,
-                        file_name=f"qr_codes_{safe_filename(model)}_{first_serial}_to_{last_serial}.zip",
-                        mime="application/zip"
-                    )
+                        st.download_button(
+                            label="Télécharger tous les QR codes (.zip)",
+                            data=zip_buffer,
+                            file_name=f"qr_codes_{safe_filename(model)}_{first_serial}_to_{last_serial}.zip",
+                            mime="application/zip"
+                        )
 
         else:
             if not model.strip() or not serial.strip():
